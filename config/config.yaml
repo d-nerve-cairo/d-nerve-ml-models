@@ -1,0 +1,65 @@
+# D-Nerve ML Configuration
+project:
+  name: "D-Nerve Route Discovery"
+  version: "1.0.0"
+  authors: ["Group 2 - ML Team"]
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  final_dir: "data/final"
+  
+  # T-Drive specific (Windows path - will be converted in code)
+  tdrive_path: "C:/Users/LENOVO/d-nerve-data/t-drive/release/taxi_log_2008_by_id"
+  num_taxis_sample: 100  # Use 100 for development, 10357 for final
+
+preprocessing:
+  # Geographic bounds (Beijing)
+  bounds:
+    min_lat: 39.4
+    max_lat: 40.5
+    min_lon: 116.0
+    max_lon: 117.0
+  
+  # Outlier removal
+  max_speed_kph: 120
+  
+  # Trip segmentation
+  max_time_gap_seconds: 600  # 10 minutes
+  min_stop_time_seconds: 120  # 2 minutes
+  min_points_per_trip: 10
+
+clustering:
+  # DBSCAN parameters (will be tuned)
+  epsilon: 300  # meters
+  min_samples: 5
+  
+  # Evaluation
+  target_f1: 0.85
+
+prediction:
+  # LightGBM parameters
+  model:
+    objective: "regression"
+    metric: "mae"
+    num_leaves: 31
+    learning_rate: 0.05
+    n_estimators: 1000
+  
+  # Target
+  target_mae: 3.0  # minutes
+  
+  # Feature engineering
+  time_windows: [5, 10, 15, 30]  # minutes
+  
+outputs:
+  route_discovery_dir: "outputs/route_discovery"
+  eta_model_dir: "outputs/eta_model"
+  visualizations_dir: "outputs/visualizations"
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "dnervecairo"
+  user: "dnerveadmin"
+  password: "secure_pass_2025"

@@ -2,49 +2,59 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual Environment
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
 venv/
-env/
-.venv
-conda-env/
+ENV/
+dnervenv/
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Data & Models (CRITICAL - these can be HUGE!)
-data/
-datasets/
+# Data files (NEVER commit large datasets!)
+data/raw/**
+data/processed/**
+data/final/**
 *.csv
+*.parquet
 *.pkl
+*.joblib
 *.h5
 *.hdf5
-*.joblib
-*.parquet
 
-# Model outputs
-models/
-*.model
-*.bin
-trained_models/
+# Outputs (models, plots)
+outputs/**
+models/**
+*.png
+*.jpg
+*.pdf
 
-# Logs & outputs
-logs/
-outputs/
-results/
-*.log
+# Large downloads
+*.zip
+*.tar.gz
+*.rar
 
-# Visualizations (optional - you might want to commit some)
-# figures/
-# plots/
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
-.DS_Store
+*.swp
+*.swo
 
-# Large files
-*.zip
-*.tar.gz
-*.rar
+# Config with secrets
+config/secrets.yaml
+config/local.yaml
+
+# Exceptions (allow tracking empty folders)
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/final/.gitkeep
+!outputs/.gitkeep
