@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+.venv
+conda-env/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data & Models (CRITICAL - these can be HUGE!)
+data/
+datasets/
+*.csv
+*.pkl
+*.h5
+*.hdf5
+*.joblib
+*.parquet
+
+# Model outputs
+models/
+*.model
+*.bin
+trained_models/
+
+# Logs & outputs
+logs/
+outputs/
+results/
+*.log
+
+# Visualizations (optional - you might want to commit some)
+# figures/
+# plots/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
