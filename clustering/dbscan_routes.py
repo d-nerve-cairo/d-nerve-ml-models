@@ -337,5 +337,5 @@ if __name__ == "__main__":
     INPUT_FILE = Path(config['data']['processed_dir']) / "tdrive_100taxis_trips.parquet"
     OUTPUT_DIR = Path(config['outputs']['route_discovery_dir'])
     
-    # Start with 500 trips for speed (can use all 2,181 later)
-    routes = run_route_discovery(INPUT_FILE, OUTPUT_DIR, sample_trips=500)
+# Use all trips:
+routes = run_route_discovery(INPUT_FILE, OUTPUT_DIR, sample_trips=None)
