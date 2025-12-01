@@ -1,5 +1,5 @@
 """
-D-Nerve ML Model Loader 
+D-Nerve ML Model Loader - Enterprise Grade
 
 Standalone model loading and prediction interface for backend integration.
 Can be copied directly to d-nerve-backend repository.
@@ -583,7 +583,7 @@ if __name__ == "__main__":
     print(f"  Status: {' Healthy' if health['healthy'] else ' Unhealthy'}")
     for check, result in health['checks'].items():
         if isinstance(result, bool):
-            print(f"  {check}: {" Success " if result else "Failed"}")
+            print(f"  {check}: {'Success' if result else 'Failed'}")
     
     # Sample prediction
     print("\n Sample Prediction:")
