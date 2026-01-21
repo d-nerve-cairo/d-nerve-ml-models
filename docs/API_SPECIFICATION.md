@@ -1,1246 +1,546 @@
-\# D-Nerve ML API Specification
+# D-Nerve ML API Specification
 
+**Version:** 2.0.0  
+**Last Updated:** January 20, 2026  
+**Team:** Group 2 - Machine Learning
 
-
-\*\*Version:\*\* 1.0.0  
-
-\*\*Last Updated:\*\* December 1, 2025  
-
-\*\*Team:\*\* Group 2 - Machine Learning
-
-
-
-This document defines the exact API contract between ML models and backend.
-
-
+This document defines the API contract between ML models and backend.
 
 ---
 
+## Overview
 
-
-\## Table of Contents
-
-
-
-1\. \[Overview](#overview)
-
-2\. \[Endpoints](#endpoints)
-
-3\. \[Request/Response Schemas](#requestresponse-schemas)
-
-4\. \[Error Codes](#error-codes)
-
-5\. \[Examples](#examples)
-
-
-
----
-
-
-
-\## Overview
-
-
-
-\### Base URL
-
+### Base URL
 ```
-
 Production: https://api.d-nerve.com/api/v1
-
 Development: http://localhost:8000/api/v1
-
 ```
 
+### Model Performance Summary
 
-
-\### Authentication
-
-
-
-Currently no authentication required (add JWT later if needed).
-
-
-
-\### Content Type
-
-
-
-All requests and responses use `application/json`.
-
-
+| Component | Metric | Value |
+|-----------|--------|-------|
+| ETA Prediction | MAE | 3.28 minutes |
+| ETA Prediction | R² | 0.865 |
+| ETA Prediction | Model | Linear Regression |
+| Route Discovery (Easy) | F1 Score | 1.000 |
+| Route Discovery (Hard) | F1 Score | 0.963 |
+| Beijing Validation | Silhouette | 0.902 |
 
 ---
 
+## Endpoints
 
+### 1. Predict ETA
 
-\## Endpoints
+Predict trip duration based on distance, time, and route characteristics.
 
+**Endpoint:** `POST /predict-eta`
 
-
-\### 1. Predict ETA
-
-
-
-Predict trip duration based on distance, time, and traffic conditions.
-
-
-
-\*\*Endpoint:\*\* `POST /predict-eta`
-
-
-
-\*\*Request Body:\*\*
-
+**Request Body:**
 ```json
-
 {
-
-&nbsp; "distance\_km": 12.5,
-
-&nbsp; "start\_lon": 116.4,
-
-&nbsp; "start\_lat": 39.9,
-
-&nbsp; "end\_lon": 116.5,
-
-&nbsp; "end\_lat": 40.0,
-
-&nbsp; "hour": 8,
-
-&nbsp; "day\_of\_week": 1,
-
-&nbsp; "avg\_speed\_kph": 22.0,
-
-&nbsp; "num\_points": 35,
-
-&nbsp; "is\_rush\_hour": 1
-
+  "distance_km": 10.0,
+  "hour": 8,
+  "day_of_week": 1,
+  "is_weekend": 0,
+  "is_peak": 1,
+  "time_period_encoded": 1,
+  "route_avg_duration": 25.0,
+  "route_std_duration": 5.0,
+  "route_avg_distance": 10.0,
+  "origin_encoded": 1,
+  "dest_encoded": 5,
+  "overlap_group": 2
 }
-
 ```
 
+**Field Descriptions:**
 
+| Field | Type | Required | Range | Description |
+|-------|------|----------|-------|-------------|
+| `distance_km` | float | Yes | 0-100 | Trip distance in kilometers |
+| `hour` | integer | Yes | 0-23 | Hour of day (24-hour format) |
+| `day_of_week` | integer | Yes | 0-6 | Day (0=Monday, 6=Sunday) |
+| `is_weekend` | integer | Yes | 0-1 | Weekend flag |
+| `is_peak` | integer | Yes | 0-1 | Peak hour flag |
+| `time_period_encoded` | integer | No | 0-3 | 0=night, 1=morning, 2=afternoon, 3=evening |
+| `route_avg_duration` | float | No | ≥0 | Historical avg duration (minutes) |
+| `route_std_duration` | float | No | ≥0 | Historical std deviation |
+| `route_avg_distance` | float | No | ≥0 | Historical avg distance (km) |
+| `origin_encoded` | integer | No | ≥0 | Origin cluster ID |
+| `dest_encoded` | integer | No | ≥0 | Destination cluster ID |
+| `overlap_group` | integer | No | ≥0 | Route overlap group ID |
 
-\*\*Field Descriptions:\*\*
-
-
-
-| Field                       | Type      | Required | Range    | Description                                |
-
-|--------------------------|------------|-------------|--------------|-------------------------------------------|
-
-| `distance\_km`       | float      | Yes         | 0-200       | Trip distance in kilometers         |
-
-| `start\_lon`              | float      | Yes         | 115-118\* | Starting longitude                      |
-
-| `start\_lat`               | float      | Yes         | 39-41\*     | Starting latitude                         |
-
-| `end\_lon`              | float      | Yes         | 115-118\* | Ending longitude                       |
-
-| `end\_lat`               | float      | Yes         | 39-41\*     | Ending latitude                          |
-
-| `hour`                    | integer  | Yes         | 0-23         | Hour of day (24-hour format)  |
-
-| `day\_of\_week`     | integer  | Yes         | 0-6           | Day (0=Monday, 6=Sunday)    |
-
-| `avg\_speed\_kph` | float      | Yes         | 0-200       | Expected average speed        |
-
-| `num\_points`        | integer  | No           | 10-1000  | GPS points (default: 30)            |
-
-| `is\_rush\_hour`       | integer  | No           | 0 or 1       | Rush hour flag (default: 0)       |
-
-
-
-\*Adjust coordinate ranges for Cairo: lat 29-31, lon 31-32
-
-
-
-\*\*Success Response (200 OK):\*\*
-
+**Success Response (200 OK):**
 ```json
-
 {
-
-&nbsp; "predicted\_duration\_minutes": 25.34,
-
-&nbsp; "confidence\_interval": {
-
-&nbsp;   "lower": 7.26,
-
-&nbsp;   "upper": 43.42
-
-&nbsp; },
-
-&nbsp; "model\_version": "1.0.0",
-
-&nbsp; "timestamp": "2025-12-01T10:30:45.123456Z"
-
+  "predicted_duration_minutes": 28.45,
+  "confidence_interval": {
+    "lower": 21.89,
+    "upper": 35.01
+  },
+  "model_version": "2.0.0",
+  "model_type": "Linear Regression",
+  "timestamp": "2026-01-20T10:30:45.123456Z"
 }
-
 ```
 
-
-
-\*\*Error Response (400 Bad Request):\*\*
-
+**Error Response (400 Bad Request):**
 ```json
-
 {
-
-&nbsp; "detail": "Invalid distance: -10.0 km (must be 0-200)"
-
+  "detail": "Invalid distance: -10.0 km (must be 0-100)"
 }
-
 ```
-
-
-
-\*\*Error Response (500 Internal Server Error):\*\*
-
-```json
-
-{
-
-&nbsp; "detail": "Prediction failed: Model not loaded"
-
-}
-
-```
-
-
 
 ---
 
+### 2. Simple ETA Prediction
 
+Simplified prediction endpoint requiring only essential parameters.
 
-\### 2. Get Model Information
+**Endpoint:** `POST /predict-eta/simple`
 
+**Request Body:**
+```json
+{
+  "distance_km": 10.0,
+  "hour": 8,
+  "is_peak": 1
+}
+```
 
+**Field Descriptions:**
+
+| Field | Type | Required | Range | Description |
+|-------|------|----------|-------|-------------|
+| `distance_km` | float | Yes | 0-100 | Trip distance in kilometers |
+| `hour` | integer | No | 0-23 | Hour of day (default: 12) |
+| `is_peak` | integer | No | 0-1 | Peak hour flag (default: 0) |
+
+**Success Response (200 OK):**
+```json
+{
+  "predicted_duration_minutes": 28.45,
+  "model_version": "2.0.0",
+  "timestamp": "2026-01-20T10:30:45.123456Z"
+}
+```
+
+---
+
+### 3. Get Model Information
 
 Get ML model metadata and performance metrics.
 
+**Endpoint:** `GET /model-info`
 
-
-\*\*Endpoint:\*\* `GET /model-info`
-
-
-
-\*\*Request:\*\* None (GET request, no body)
-
-
-
-\*\*Success Response (200 OK):\*\*
-
+**Success Response (200 OK):**
 ```json
-
 {
-
-&nbsp; "model\_name": "LightGBM ETA Predictor",
-
-&nbsp; "version": "1.0.0",
-
-&nbsp; "mae\_minutes": 9.04,
-
-&nbsp; "r2\_score": 0.9513,
-
-&nbsp; "training\_date": "2025-12-01",
-
-&nbsp; "feature\_count": 13,
-
-&nbsp; "status": "loaded",
-
-&nbsp; "routes\_available": true
-
+  "model_name": "D-Nerve ETA Predictor",
+  "version": "2.0.0",
+  "model_type": "Linear Regression",
+  "mae_minutes": 3.28,
+  "rmse_minutes": 4.74,
+  "r2_score": 0.865,
+  "cv_mae": "3.50 ± 0.35",
+  "training_date": "2026-01-20",
+  "feature_count": 12,
+  "status": "loaded",
+  "routes_available": true,
+  "route_discovery": {
+    "algorithm": "DBSCAN",
+    "f1_score_easy": 1.0,
+    "f1_score_hard": 0.963,
+    "beijing_validation_silhouette": 0.902
+  }
 }
-
 ```
-
-
-
-\*\*Field Descriptions:\*\*
-
-
-
-| Field | Type | Description |
-
-|-------|------|-------------|
-
-| `model\_name` | string | Model name |
-
-| `version` | string | Model version |
-
-| `mae\_minutes` | float | Mean Absolute Error (test set) |
-
-| `r2\_score` | float | R² score (0-1, higher is better) |
-
-| `training\_date` | string | Training date (YYYY-MM-DD) |
-
-| `feature\_count` | integer | Number of input features |
-
-| `status` | string | "loaded" or "not\_loaded" |
-
-| `routes\_available` | boolean | Route data available |
-
-
 
 ---
 
-
-
-\### 3. Health Check
-
-
+### 4. Health Check
 
 Check if ML models are operational.
 
+**Endpoint:** `GET /health`
 
-
-\*\*Endpoint:\*\* `GET /health`
-
-
-
-\*\*Request:\*\* None (GET request, no body)
-
-
-
-\*\*Success Response (200 OK - Healthy):\*\*
-
+**Success Response (200 OK - Healthy):**
 ```json
-
 {
-
-&nbsp; "healthy": true,
-
-&nbsp; "checks": {
-
-&nbsp;   "eta\_model\_exists": true,
-
-&nbsp;   "eta\_model\_loadable": true,
-
-&nbsp;   "routes\_data\_exists": true,
-
-&nbsp;   "sample\_prediction": true
-
-&nbsp; },
-
-&nbsp; "timestamp": "2025-12-01T10:30:45.123456Z"
-
+  "healthy": true,
+  "checks": {
+    "eta_model_exists": true,
+    "eta_model_loadable": true,
+    "routes_data_exists": true,
+    "sample_prediction": true,
+    "sample_result_minutes": 15.23
+  },
+  "timestamp": "2026-01-20T10:30:45.123456Z"
 }
-
 ```
 
-
-
-\*\*Error Response (503 Service Unavailable - Unhealthy):\*\*
-
+**Error Response (503 Service Unavailable):**
 ```json
-
 {
-
-&nbsp; "healthy": false,
-
-&nbsp; "checks": {
-
-&nbsp;   "eta\_model\_exists": false,
-
-&nbsp;   "eta\_model\_loadable": false,
-
-&nbsp;   "eta\_model\_error": "FileNotFoundError: Model not found",
-
-&nbsp;   "routes\_data\_exists": true,
-
-&nbsp;   "sample\_prediction": false,
-
-&nbsp;   "prediction\_error": "Model not loaded"
-
-&nbsp; },
-
-&nbsp; "timestamp": "2025-12-01T10:30:45.123456Z"
-
+  "healthy": false,
+  "checks": {
+    "eta_model_exists": false,
+    "eta_model_loadable": false,
+    "eta_model_error": "FileNotFoundError: Model not found",
+    "routes_data_exists": true,
+    "sample_prediction": false
+  },
+  "timestamp": "2026-01-20T10:30:45.123456Z"
 }
-
 ```
-
-
 
 ---
 
-
-
-\## Request/Response Schemas
-
-
-
-\### PredictionRequest Schema
-
-```json
-
-{
-
-&nbsp; "type": "object",
-
-&nbsp; "required": \[
-
-&nbsp;   "distance\_km",
-
-&nbsp;   "start\_lon",
-
-&nbsp;   "start\_lat",
-
-&nbsp;   "end\_lon",
-
-&nbsp;   "end\_lat",
-
-&nbsp;   "hour",
-
-&nbsp;   "day\_of\_week",
-
-&nbsp;   "avg\_speed\_kph"
-
-&nbsp; ],
-
-&nbsp; "properties": {
-
-&nbsp;   "distance\_km": {
-
-&nbsp;     "type": "number",
-
-&nbsp;     "minimum": 0,
-
-&nbsp;     "maximum": 200,
-
-&nbsp;     "example": 12.5
-
-&nbsp;   },
-
-&nbsp;   "start\_lon": {
-
-&nbsp;     "type": "number",
-
-&nbsp;     "minimum": 115,
-
-&nbsp;     "maximum": 118,
-
-&nbsp;     "example": 116.4
-
-&nbsp;   },
-
-&nbsp;   "start\_lat": {
-
-&nbsp;     "type": "number",
-
-&nbsp;     "minimum": 39,
-
-&nbsp;     "maximum": 41,
-
-&nbsp;     "example": 39.9
-
-&nbsp;   },
-
-&nbsp;   "end\_lon": {
-
-&nbsp;     "type": "number",
-
-&nbsp;     "minimum": 115,
-
-&nbsp;     "maximum": 118,
-
-&nbsp;     "example": 116.5
-
-&nbsp;   },
-
-&nbsp;   "end\_lat": {
-
-&nbsp;     "type": "number",
-
-&nbsp;     "minimum": 39,
-
-&nbsp;     "maximum": 41,
-
-&nbsp;     "example": 40.0
-
-&nbsp;   },
-
-&nbsp;   "hour": {
-
-&nbsp;     "type": "integer",
-
-&nbsp;     "minimum": 0,
-
-&nbsp;     "maximum": 23,
-
-&nbsp;     "example": 8
-
-&nbsp;   },
-
-&nbsp;   "day\_of\_week": {
-
-&nbsp;     "type": "integer",
-
-&nbsp;     "minimum": 0,
-
-&nbsp;     "maximum": 6,
-
-&nbsp;     "example": 1
-
-&nbsp;   },
-
-&nbsp;   "avg\_speed\_kph": {
-
-&nbsp;     "type": "number",
-
-&nbsp;     "minimum": 0,
-
-&nbsp;     "maximum": 200,
-
-&nbsp;     "example": 22.0
-
-&nbsp;   },
-
-&nbsp;   "num\_points": {
-
-&nbsp;     "type": "integer",
-
-&nbsp;     "minimum": 10,
-
-&nbsp;     "maximum": 1000,
-
-&nbsp;     "default": 30,
-
-&nbsp;     "example": 35
-
-&nbsp;   },
-
-&nbsp;   "is\_rush\_hour": {
-
-&nbsp;     "type": "integer",
-
-&nbsp;     "enum": \[0, 1],
-
-&nbsp;     "default": 0,
-
-&nbsp;     "example": 1
-
-&nbsp;   }
-
-&nbsp; }
-
-}
-
+## Request/Response Schemas
+
+### ETAPredictionRequest Schema (OpenAPI)
+```yaml
+ETAPredictionRequest:
+  type: object
+  required:
+    - distance_km
+    - hour
+    - day_of_week
+    - is_weekend
+    - is_peak
+  properties:
+    distance_km:
+      type: number
+      minimum: 0
+      maximum: 100
+      example: 10.0
+    hour:
+      type: integer
+      minimum: 0
+      maximum: 23
+      example: 8
+    day_of_week:
+      type: integer
+      minimum: 0
+      maximum: 6
+      example: 1
+    is_weekend:
+      type: integer
+      enum: [0, 1]
+      example: 0
+    is_peak:
+      type: integer
+      enum: [0, 1]
+      example: 1
+    time_period_encoded:
+      type: integer
+      minimum: 0
+      maximum: 3
+      default: 2
+      example: 1
+    route_avg_duration:
+      type: number
+      minimum: 0
+      default: 15.0
+      example: 25.0
+    route_std_duration:
+      type: number
+      minimum: 0
+      default: 3.0
+      example: 5.0
+    route_avg_distance:
+      type: number
+      minimum: 0
+      default: 5.0
+      example: 10.0
+    origin_encoded:
+      type: integer
+      minimum: 0
+      default: 0
+      example: 1
+    dest_encoded:
+      type: integer
+      minimum: 0
+      default: 0
+      example: 5
+    overlap_group:
+      type: integer
+      minimum: 0
+      default: 0
+      example: 2
 ```
 
-
-
-\### PredictionResponse Schema
-
-```json
-
-{
-
-&nbsp; "type": "object",
-
-&nbsp; "properties": {
-
-&nbsp;   "predicted\_duration\_minutes": {
-
-&nbsp;     "type": "number",
-
-&nbsp;     "example": 25.34
-
-&nbsp;   },
-
-&nbsp;   "confidence\_interval": {
-
-&nbsp;     "type": "object",
-
-&nbsp;     "properties": {
-
-&nbsp;       "lower": {
-
-&nbsp;         "type": "number",
-
-&nbsp;         "example": 7.26
-
-&nbsp;       },
-
-&nbsp;       "upper": {
-
-&nbsp;         "type": "number",
-
-&nbsp;         "example": 43.42
-
-&nbsp;       }
-
-&nbsp;     }
-
-&nbsp;   },
-
-&nbsp;   "model\_version": {
-
-&nbsp;     "type": "string",
-
-&nbsp;     "example": "1.0.0"
-
-&nbsp;   },
-
-&nbsp;   "timestamp": {
-
-&nbsp;     "type": "string",
-
-&nbsp;     "format": "date-time",
-
-&nbsp;     "example": "2025-12-01T10:30:45.123456Z"
-
-&nbsp;   }
-
-&nbsp; }
-
-}
-
+### ETAPredictionResponse Schema
+```yaml
+ETAPredictionResponse:
+  type: object
+  properties:
+    predicted_duration_minutes:
+      type: number
+      example: 28.45
+    confidence_interval:
+      type: object
+      properties:
+        lower:
+          type: number
+          example: 21.89
+        upper:
+          type: number
+          example: 35.01
+    model_version:
+      type: string
+      example: "2.0.0"
+    model_type:
+      type: string
+      example: "Linear Regression"
+    timestamp:
+      type: string
+      format: date-time
+      example: "2026-01-20T10:30:45.123456Z"
 ```
-
-
 
 ---
 
-
-
-\## Error Codes
-
-
+## Error Codes
 
 | Status Code | Error Type | Description | Solution |
-
 |-------------|------------|-------------|----------|
-
 | 400 | Bad Request | Invalid input parameters | Check request body against schema |
-
 | 422 | Unprocessable Entity | Validation error | Fix data types/ranges |
-
 | 500 | Internal Server Error | Model prediction failed | Check logs, verify model files |
-
 | 503 | Service Unavailable | ML models not loaded | Run health check, restart service |
 
-
-
-\### Common Error Messages
-
-
-
-\*\*1. Invalid Distance:\*\*
-
-```json
-
-{
-
-&nbsp; "detail": "Invalid distance: -10.0 km (must be 0-200)"
-
-}
-
-```
-
-\*\*Solution:\*\* Ensure distance is positive and ≤ 200 km.
-
-
-
-\*\*2. Invalid Coordinates:\*\*
-
-```json
-
-{
-
-&nbsp; "detail": "Invalid start coordinates: (50.0, 120.0)"
-
-}
-
-```
-
-\*\*Solution:\*\* Use coordinates within Beijing bounds (or Cairo for production).
-
-
-
-\*\*3. Invalid Hour:\*\*
-
-```json
-
-{
-
-&nbsp; "detail": "Invalid hour: 25 (must be 0-23)"
-
-}
-
-```
-
-\*\*Solution:\*\* Use 24-hour format (0-23).
-
-
-
-\*\*4. Model Not Loaded:\*\*
-
-```json
-
-{
-
-&nbsp; "detail": "Prediction failed: Model not loaded"
-
-}
-
-```
-
-\*\*Solution:\*\* Check model files exist in `app/ml/models/`. Run health check.
-
-
-
 ---
 
+## Examples
 
+### Example 1: Morning Commute (Rush Hour)
 
-\## Examples
-
-
-
-\### Example 1: Morning Commute (Rush Hour)
-
-
-
-\*\*Request:\*\*
-
+**Request:**
 ```bash
-
-curl -X POST "http://localhost:8000/api/v1/predict-eta" \\
-
-&nbsp; -H "Content-Type: application/json" \\
-
-&nbsp; -d '{
-
-&nbsp;   "distance\_km": 12.5,
-
-&nbsp;   "start\_lon": 116.3975,
-
-&nbsp;   "start\_lat": 39.9087,
-
-&nbsp;   "end\_lon": 116.4832,
-
-&nbsp;   "end\_lat": 39.9897,
-
-&nbsp;   "hour": 8,
-
-&nbsp;   "day\_of\_week": 1,
-
-&nbsp;   "avg\_speed\_kph": 22.0,
-
-&nbsp;   "num\_points": 35,
-
-&nbsp;   "is\_rush\_hour": 1
-
-&nbsp; }'
-
+curl -X POST "http://localhost:8000/api/v1/predict-eta" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "distance_km": 12.0,
+    "hour": 8,
+    "day_of_week": 1,
+    "is_weekend": 0,
+    "is_peak": 1,
+    "time_period_encoded": 1,
+    "route_avg_duration": 30.0,
+    "route_std_duration": 6.0,
+    "route_avg_distance": 12.0
+  }'
 ```
 
-
-
-\*\*Response:\*\*
-
+**Response:**
 ```json
-
 {
-
-&nbsp; "predicted\_duration\_minutes": 34.12,
-
-&nbsp; "confidence\_interval": {
-
-&nbsp;   "lower": 16.04,
-
-&nbsp;   "upper": 52.20
-
-&nbsp; },
-
-&nbsp; "model\_version": "1.0.0",
-
-&nbsp; "timestamp": "2025-12-01T08:00:00.000000Z"
-
+  "predicted_duration_minutes": 32.15,
+  "confidence_interval": {
+    "lower": 25.59,
+    "upper": 38.71
+  },
+  "model_version": "2.0.0",
+  "model_type": "Linear Regression",
+  "timestamp": "2026-01-20T08:00:00.000000Z"
 }
-
 ```
 
+### Example 2: Simple Prediction
 
-
-\*\*Interpretation:\*\* Trip will take ~34 minutes (95% confidence: 16-52 min)
-
-
-
----
-
-
-
-\### Example 2: Evening Trip (Non-Rush)
-
-
-
-\*\*Request:\*\*
-
+**Request:**
 ```bash
-
-curl -X POST "http://localhost:8000/api/v1/predict-eta" \\
-
-&nbsp; -H "Content-Type: application/json" \\
-
-&nbsp; -d '{
-
-&nbsp;   "distance\_km": 8.0,
-
-&nbsp;   "start\_lon": 116.4,
-
-&nbsp;   "start\_lat": 39.9,
-
-&nbsp;   "end\_lon": 116.5,
-
-&nbsp;   "end\_lat": 40.0,
-
-&nbsp;   "hour": 22,
-
-&nbsp;   "day\_of\_week": 3,
-
-&nbsp;   "avg\_speed\_kph": 45.0,
-
-&nbsp;   "is\_rush\_hour": 0
-
-&nbsp; }'
-
+curl -X POST "http://localhost:8000/api/v1/predict-eta/simple" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "distance_km": 5.0,
+    "hour": 14,
+    "is_peak": 0
+  }'
 ```
 
-
-
-\*\*Response:\*\*
-
+**Response:**
 ```json
-
 {
-
-&nbsp; "predicted\_duration\_minutes": 13.52,
-
-&nbsp; "confidence\_interval": {
-
-&nbsp;   "lower": 0.00,
-
-&nbsp;   "upper": 31.60
-
-&nbsp; },
-
-&nbsp; "model\_version": "1.0.0",
-
-&nbsp; "timestamp": "2025-12-01T22:00:00.000000Z"
-
+  "predicted_duration_minutes": 12.34,
+  "model_version": "2.0.0",
+  "timestamp": "2026-01-20T14:00:00.000000Z"
 }
-
 ```
 
+### Example 3: Health Check
 
-
-\*\*Interpretation:\*\* Fast trip (~14 minutes) due to late hour and high speed.
-
-
-
----
-
-
-
-\### Example 3: Weekend Short Trip
-
-
-
-\*\*Request:\*\*
-
+**Request:**
 ```bash
-
-curl -X POST "http://localhost:8000/api/v1/predict-eta" \\
-
-&nbsp; -H "Content-Type: application/json" \\
-
-&nbsp; -d '{
-
-&nbsp;   "distance\_km": 5.0,
-
-&nbsp;   "start\_lon": 116.4,
-
-&nbsp;   "start\_lat": 39.9,
-
-&nbsp;   "end\_lon": 116.45,
-
-&nbsp;   "end\_lat": 39.95,
-
-&nbsp;   "hour": 14,
-
-&nbsp;   "day\_of\_week": 6,
-
-&nbsp;   "avg\_speed\_kph": 30.0
-
-&nbsp; }'
-
-```
-
-
-
-\*\*Response:\*\*
-
-```json
-
-{
-
-&nbsp; "predicted\_duration\_minutes": 10.23,
-
-&nbsp; "confidence\_interval": {
-
-&nbsp;   "lower": 0.00,
-
-&nbsp;   "upper": 28.31
-
-&nbsp; },
-
-&nbsp; "model\_version": "1.0.0",
-
-&nbsp; "timestamp": "2025-12-01T14:00:00.000000Z"
-
-}
-
-```
-
-
-
----
-
-
-
-\### Example 4: Health Check
-
-
-
-\*\*Request:\*\*
-
-```bash
-
 curl -X GET "http://localhost:8000/api/v1/health"
-
 ```
 
-
-
-\*\*Response (Healthy):\*\*
-
+**Response:**
 ```json
-
 {
-
-&nbsp; "healthy": true,
-
-&nbsp; "checks": {
-
-&nbsp;   "eta\_model\_exists": true,
-
-&nbsp;   "eta\_model\_loadable": true,
-
-&nbsp;   "routes\_data\_exists": true,
-
-&nbsp;   "sample\_prediction": true
-
-&nbsp; },
-
-&nbsp; "timestamp": "2025-12-01T10:30:45.123456Z"
-
+  "healthy": true,
+  "checks": {
+    "eta_model_exists": true,
+    "eta_model_loadable": true,
+    "routes_data_exists": true,
+    "sample_prediction": true,
+    "sample_result_minutes": 15.23
+  },
+  "timestamp": "2026-01-20T10:30:45.123456Z"
 }
-
 ```
-
-
 
 ---
 
+## FastAPI Integration
 
-
-\### Example 5: Model Info
-
-
-
-\*\*Request:\*\*
-
-```bash
-
-curl -X GET "http://localhost:8000/api/v1/model-info"
-
-```
-
-
-
-\*\*Response:\*\*
-
-```json
-
-{
-
-&nbsp; "model\_name": "LightGBM ETA Predictor",
-
-&nbsp; "version": "1.0.0",
-
-&nbsp; "mae\_minutes": 9.04,
-
-&nbsp; "r2\_score": 0.9513,
-
-&nbsp; "training\_date": "2025-12-01",
-
-&nbsp; "feature\_count": 13,
-
-&nbsp; "status": "loaded",
-
-&nbsp; "routes\_available": true
-
-}
-
-```
-
-
-
----
-
-
-
-\## Postman Collection
-
-
-
-Import this JSON into Postman for easy testing:
-
-```json
-
-{
-
-&nbsp; "info": {
-
-&nbsp;   "name": "D-Nerve ML API",
-
-&nbsp;   "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-
-&nbsp; },
-
-&nbsp; "item": \[
-
-&nbsp;   {
-
-&nbsp;     "name": "Predict ETA",
-
-&nbsp;     "request": {
-
-&nbsp;       "method": "POST",
-
-&nbsp;       "header": \[
-
-&nbsp;         {
-
-&nbsp;           "key": "Content-Type",
-
-&nbsp;           "value": "application/json"
-
-&nbsp;         }
-
-&nbsp;       ],
-
-&nbsp;       "body": {
-
-&nbsp;         "mode": "raw",
-
-&nbsp;         "raw": "{\\n  \\"distance\_km\\": 12.5,\\n  \\"start\_lon\\": 116.4,\\n  \\"start\_lat\\": 39.9,\\n  \\"end\_lon\\": 116.5,\\n  \\"end\_lat\\": 40.0,\\n  \\"hour\\": 8,\\n  \\"day\_of\_week\\": 1,\\n  \\"avg\_speed\_kph\\": 22.0,\\n  \\"num\_points\\": 35,\\n  \\"is\_rush\_hour\\": 1\\n}"
-
-&nbsp;       },
-
-&nbsp;       "url": {
-
-&nbsp;         "raw": "http://localhost:8000/api/v1/predict-eta",
-
-&nbsp;         "protocol": "http",
-
-&nbsp;         "host": \["localhost"],
-
-&nbsp;         "port": "8000",
-
-&nbsp;         "path": \["api", "v1", "predict-eta"]
-
-&nbsp;       }
-
-&nbsp;     }
-
-&nbsp;   },
-
-&nbsp;   {
-
-&nbsp;     "name": "Health Check",
-
-&nbsp;     "request": {
-
-&nbsp;       "method": "GET",
-
-&nbsp;       "url": {
-
-&nbsp;         "raw": "http://localhost:8000/api/v1/health",
-
-&nbsp;         "protocol": "http",
-
-&nbsp;         "host": \["localhost"],
-
-&nbsp;         "port": "8000",
-
-&nbsp;         "path": \["api", "v1", "health"]
-
-&nbsp;       }
-
-&nbsp;     }
-
-&nbsp;   },
-
-&nbsp;   {
-
-&nbsp;     "name": "Model Info",
-
-&nbsp;     "request": {
-
-&nbsp;       "method": "GET",
-
-&nbsp;       "url": {
-
-&nbsp;         "raw": "http://localhost:8000/api/v1/model-info",
-
-&nbsp;         "protocol": "http",
-
-&nbsp;         "host": \["localhost"],
-
-&nbsp;         "port": "8000",
-
-&nbsp;         "path": \["api", "v1", "model-info"]
-
-&nbsp;       }
-
-&nbsp;     }
-
-&nbsp;   }
-
-&nbsp; ]
-
-}
-
-```
-
-
-
----
-
-
-
-\## Implementation Checklist
-
-
-
-\*\*Backend Team (Group 1) - Use this checklist:\*\*
-
-
-
-\- \[ ] Copy `model\_loader.py` to backend repo
-
-\- \[ ] Copy model files (`.pkl`) to backend repo
-
-\- \[ ] Create FastAPI router with 3 endpoints
-
-\- \[ ] Implement request validation (Pydantic)
-
-\- \[ ] Implement error handling (try-catch)
-
-\- \[ ] Test all endpoints with Postman
-
-\- \[ ] Update coordinate validation for Cairo
-
-\- \[ ] Add logging for debugging
-
-\- \[ ] Deploy to staging environment
-
-\- \[ ] Integration test with mobile apps
-
-
-
----
-
-
-
-\## Notes for Cairo Deployment
-
-
-
-\*\*When switching from Beijing to Cairo data:\*\*
-
-
-
-1\. \*\*Update coordinate validation in `model\_loader.py`:\*\*
+### Complete Router Implementation
 
 ```python
+# app/routers/eta.py
 
-&nbsp;  # Change line 106-111 from:
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+from typing import Optional
+from app.ml.model_loader import DNerveModelLoader, ETAPredictionRequest
 
-&nbsp;  if not (39.0 <= self.start\_lat <= 41.0 and 115.0 <= self.start\_lon <= 118.0):
+router = APIRouter(prefix="/api/v1", tags=["ETA Prediction"])
 
-&nbsp;  
+# Initialize model loader (singleton)
+model_loader = DNerveModelLoader()
 
-&nbsp;  # To:
 
-&nbsp;  if not (29.0 <= self.start\_lat <= 31.0 and 31.0 <= self.start\_lon <= 32.0):
+class ETARequestFull(BaseModel):
+    """Full ETA prediction request"""
+    distance_km: float = Field(..., ge=0, le=100, description="Trip distance in km")
+    hour: int = Field(..., ge=0, le=23, description="Hour of day")
+    day_of_week: int = Field(..., ge=0, le=6, description="Day of week (0=Monday)")
+    is_weekend: int = Field(..., ge=0, le=1, description="Weekend flag")
+    is_peak: int = Field(..., ge=0, le=1, description="Peak hour flag")
+    time_period_encoded: int = Field(2, ge=0, le=3, description="Time period")
+    route_avg_duration: float = Field(15.0, ge=0, description="Historical avg duration")
+    route_std_duration: float = Field(3.0, ge=0, description="Historical std duration")
+    route_avg_distance: float = Field(5.0, ge=0, description="Historical avg distance")
+    origin_encoded: int = Field(0, ge=0, description="Origin cluster ID")
+    dest_encoded: int = Field(0, ge=0, description="Destination cluster ID")
+    overlap_group: int = Field(0, ge=0, description="Overlap group ID")
 
+
+class ETARequestSimple(BaseModel):
+    """Simple ETA prediction request"""
+    distance_km: float = Field(..., ge=0, le=100, description="Trip distance in km")
+    hour: int = Field(12, ge=0, le=23, description="Hour of day")
+    is_peak: int = Field(0, ge=0, le=1, description="Peak hour flag")
+
+
+@router.post("/predict-eta")
+async def predict_eta(request: ETARequestFull):
+    """Full ETA prediction with all features"""
+    try:
+        ml_request = ETAPredictionRequest(
+            distance_km=request.distance_km,
+            hour=request.hour,
+            day_of_week=request.day_of_week,
+            is_weekend=request.is_weekend,
+            is_peak=request.is_peak,
+            time_period_encoded=request.time_period_encoded,
+            route_avg_duration=request.route_avg_duration,
+            route_std_duration=request.route_std_duration,
+            route_avg_distance=request.route_avg_distance,
+            origin_encoded=request.origin_encoded,
+            dest_encoded=request.dest_encoded,
+            overlap_group=request.overlap_group
+        )
+        response = model_loader.predict_eta(ml_request)
+        return response.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/predict-eta/simple")
+async def predict_eta_simple(request: ETARequestSimple):
+    """Simple ETA prediction with minimal inputs"""
+    try:
+        duration = model_loader.predict_eta_simple(
+            distance_km=request.distance_km,
+            hour=request.hour,
+            is_peak=request.is_peak
+        )
+        return {
+            "predicted_duration_minutes": round(duration, 2),
+            "model_version": "2.0.0",
+            "timestamp": datetime.utcnow().isoformat() + 'Z'
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/model-info")
+async def get_model_info():
+    """Get ML model information"""
+    return model_loader.get_model_info()
+
+
+@router.get("/health")
+async def health_check():
+    """ML model health check"""
+    result = model_loader.health_check()
+    if not result['healthy']:
+        raise HTTPException(status_code=503, detail=result)
+    return result
 ```
 
+---
 
+## Files Required for Backend
 
-2\. \*\*Retrain model with Cairo data\*\*
+### Copy These Files
 
-3\. \*\*Update model metadata\*\*
+| Source (ML Repo) | Destination (Backend Repo) |
+|------------------|---------------------------|
+| `backend_integration/model_loader.py` | `app/ml/model_loader.py` |
+| `outputs/eta_prediction/eta_best_model.pkl` | `app/ml/models/eta_best_model.pkl` |
+| `outputs/cairo_hard_mode/hard_mode_results.pkl` | `app/ml/models/hard_mode_results.pkl` (optional) |
 
-4\. \*\*Test with Cairo coordinates\*\*
+### Update Model Path in model_loader.py
 
+After copying, update the model path in `model_loader.py`:
 
+```python
+# Change from:
+self.eta_model_path = self.model_dir / "eta_prediction" / "eta_best_model.pkl"
+
+# To:
+self.eta_model_path = Path(__file__).parent / "models" / "eta_best_model.pkl"
+```
 
 ---
 
+## Dependencies
 
-
-\## Support
-
-
-
-\*\*Questions or issues?\*\*
-
-\- Create issue: https://github.com/d-nerve-cairo/d-nerve-ml-models/issues
-
-\- Contact: Group 2 - ML Team
-
-\- Documentation: See `BACKEND\_INTEGRATION\_GUIDE.md`
-
-
+```txt
+# requirements.txt additions
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.0.0
+```
 
 ---
 
-
-
-\*\*Version History:\*\*
-
-
+## Version History
 
 | Version | Date | Changes |
-
 |---------|------|---------|
-
 | 1.0.0 | 2025-12-01 | Initial API specification |
-
-
+| 2.0.0 | 2026-01-20 | Updated model (Linear Regression), correct metrics, Cairo coordinates, Beijing validation |
 
 ---
 
-
-
-\*\*Last Updated:\*\* December 1, 2025  
-
-\*\*Maintained by:\*\* Group 2 - ML Team
-
+**Maintained by:** Group 2 - ML Team

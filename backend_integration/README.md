@@ -1,552 +1,294 @@
-\# Backend Integration Package
+# Backend Integration Package v2.0
 
+**Updated ML model loader for D-Nerve backend team**
 
-
-\*\*Ready-to-use ML model loader for D-Nerve backend team\*\*
-
-
-
-This package contains everything Group 1 (Backend) needs to integrate ML models into the FastAPI backend.
-
-
+This package provides everything Group 1 (Backend) needs to integrate the ML models into FastAPI.
 
 ---
 
+## What's Changed in v2.0
 
+| Component | v1.0 | v2.0 |
+|-----------|------|------|
+| Best Model | LightGBM | **Linear Regression** |
+| MAE | 9.04 min | **3.28 min** |
+| R² Score | 0.9513 | **0.865** |
+| Features | 13 | **12** |
+| Model File | `lightgbm_eta_model.pkl` | **`eta_best_model.pkl`** |
+| Coordinates | Beijing only | **Cairo + Beijing** |
+| Validation | Synthetic only | **+ Beijing real data** |
 
-\##  What's in This Package
+---
+
+## Package Contents
 
 ```
-
-backend\_integration/
-
-├── model\_loader.py          ← Core model loader (COPY THIS)
-
-├── README.md                ← This file
-
+backend_integration/
+├── model_loader.py          → Updated model loader (COPY THIS)
+├── README.md                → This file
 ├── examples/
-
-│   └── example\_usage.py     ← Usage examples
-
+│   └── example_usage.py     → Usage examples
 └── tests/
+    └── test_model_loader.py → Unit tests
 
-&nbsp;   └── test\_model\_loader.py ← Unit tests
-
+docs/
+├── API_SPECIFICATION.md     → Updated API contract
+└── BACKEND_INTEGRATION_GUIDE.md
 ```
-
-
 
 ---
 
+## Quick Start (5 Minutes)
 
-
-\##  Quick Start (5 Minutes)
-
-
-
-\### Step 1: Test the Model Loader
+### Step 1: Test the Model Loader
 
 ```bash
-
-\# Make sure you're in ML repo and environment is activated
-
-cd %USERPROFILE%\\Projects\\d-nerve-ml-models
-
+cd C:\Users\LENOVO\Projects\d-nerve-ml-models
 conda activate dnervenv
 
-
-
-\# Run the demo
-
-python backend\_integration\\model\_loader.py
-
+python backend_integration/model_loader.py
 ```
 
-
-
-\*\*Expected output:\*\*
-
+**Expected output:**
 ```
-
+======================================================================
+D-NERVE MODEL LOADER v2.0 - DEMO
 ======================================================================
 
-D-NERVE MODEL LOADER - DEMO
+📊 Model Information:
+  Model: D-Nerve ETA Predictor v2.0.0
+  Type: Linear Regression
+  MAE: 3.28 minutes
+  R²: 0.865
+  
+🛣️ Route Discovery Performance:
+  F1 Score (Easy): 1.0
+  F1 Score (Hard): 0.963
+  Beijing Silhouette: 0.902
 
-======================================================================
+🏥 Health Check:
+  Status: ✓ Healthy
+  
+🚌 Sample Predictions:
+  3 km at 2pm (off-peak): 8.5 minutes
+  8 km at 8am (peak): 22.3 minutes
+  15 km at 7pm (peak): 38.1 minutes
 
-
-
-&nbsp;Model Information:
-
-&nbsp; model\_name: LightGBM ETA Predictor
-
-&nbsp; version: 1.0.0
-
-&nbsp; mae\_minutes: 9.04
-
-&nbsp; r2\_score: 0.9513
-
-&nbsp; ...
-
-
-
-&nbsp; Health Check:
-
-&nbsp; Status:  Healthy
-
-&nbsp; ...
-
-
-
-&nbsp;Sample Prediction:
-
-&nbsp; Predicted Duration: 25.3 minutes
-
-&nbsp; ...
-
-
-
-&nbsp;Demo complete!
-
+✅ Demo complete!
 ```
-
-
 
 ---
 
+## For Backend Team (Group 1)
 
+### Files to Copy
 
-\### Step 2: Run Examples
-
-```bash
-
-python backend\_integration\\examples\\example\_usage.py
+**From ML repository:**
 
 ```
-
-
-
-\*\*This shows:\*\*
-
-\- Basic prediction
-
-\- Simplified function usage
-
-\- Batch predictions
-
-\- Error handling
-
-\- FastAPI integration pattern
-
-
-
----
-
-
-
-\### Step 3: Run Tests
-
-```bash
-
-\# Install pytest if not already installed
-
-pip install pytest
-
-
-
-\# Run tests
-
-python -m pytest backend\_integration\\tests\\test\_model\_loader.py -v
-
+d-nerve-ml-models/
+├── backend_integration/model_loader.py  → Copy this
+└── outputs/
+    ├── eta_prediction/eta_best_model.pkl  → Copy this
+    └── cairo_hard_mode/hard_mode_results.pkl  → Optional
 ```
 
-
-
----
-
-
-
-\##  For Backend Team (Group 1)
-
-
-
-\### Files You Need to Copy
-
-
-
-\*\*From `d-nerve-ml-models` repository:\*\*
-
-
-
-1\. \*\*Model Loader:\*\*
+**To backend repository:**
 
 ```
-
-&nbsp;  backend\_integration/model\_loader.py
-
-&nbsp;  → Copy to: d-nerve-backend/app/ml/model\_loader.py
-
+d-nerve-backend/
+└── app/
+    └── ml/
+        ├── model_loader.py  ← Paste here
+        └── models/
+            ├── eta_best_model.pkl  ← Paste here
+            └── hard_mode_results.pkl  ← Optional
 ```
 
+### Copy Commands (Windows)
 
+```cmd
+cd C:\Users\LENOVO\Projects\d-nerve-backend
 
-2\. \*\*Trained Models:\*\*
+mkdir app\ml\models
 
+copy ..\d-nerve-ml-models\backend_integration\model_loader.py app\ml\
+copy ..\d-nerve-ml-models\outputs\eta_prediction\eta_best_model.pkl app\ml\models\
 ```
 
-&nbsp;  outputs/eta\_model/lightgbm\_eta\_model.pkl
+### Update Model Path
 
-&nbsp;  → Copy to: d-nerve-backend/app/ml/models/lightgbm\_eta\_model.pkl
-
-&nbsp;  
-
-&nbsp;  outputs/route\_discovery/route\_discovery\_results.pkl
-
-&nbsp;  → Copy to: d-nerve-backend/app/ml/models/route\_discovery\_results.pkl
-
-```
-
-
-
----
-
-
-
-\### Integration Steps
-
-
-
-\*\*1. Clone ML Repository (if not done):\*\*
-
-```bash
-
-git clone https://github.com/d-nerve-cairo/d-nerve-ml-models.git
-
-cd d-nerve-ml-models
-
-```
-
-
-
-\*\*2. Copy Files to Your Backend Repo:\*\*
-
-```bash
-
-\# In your d-nerve-backend repo
-
-mkdir -p app/ml/models
-
-
-
-\# Copy model loader
-
-cp ../d-nerve-ml-models/backend\_integration/model\_loader.py app/ml/
-
-
-
-\# Copy trained models
-
-cp ../d-nerve-ml-models/outputs/eta\_model/lightgbm\_eta\_model.pkl app/ml/models/
-
-cp ../d-nerve-ml-models/outputs/route\_discovery/route\_discovery\_results.pkl app/ml/models/
-
-```
-
-
-
-\*\*3. Create FastAPI Endpoint:\*\*
+After copying, edit `app/ml/model_loader.py` line ~95:
 
 ```python
+# Change from:
+self.eta_model_path = self.model_dir / "eta_prediction" / "eta_best_model.pkl"
 
-\# In d-nerve-backend/app/routers/eta.py
+# To:
+self.eta_model_path = Path(__file__).parent / "models" / "eta_best_model.pkl"
+```
 
+---
 
+## FastAPI Integration
 
+### Create Router (app/routers/eta.py)
+
+```python
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+from datetime import datetime
+from app.ml.model_loader import DNerveModelLoader, ETAPredictionRequest
 
-from pydantic import BaseModel
+router = APIRouter(prefix="/api/v1", tags=["ETA"])
 
-from app.ml.model\_loader import DNerveModelLoader, PredictionRequest
-
-
-
-router = APIRouter(prefix="/api/v1", tags=\["ETA"])
-
+model_loader = DNerveModelLoader()
 
 
-\# Initialize model loader (singleton - loads once)
-
-model\_loader = DNerveModelLoader()
-
-
-
-class ETARequest(BaseModel):
-
-&nbsp;   distance\_km: float
-
-&nbsp;   start\_lon: float
-
-&nbsp;   start\_lat: float
-
-&nbsp;   end\_lon: float
-
-&nbsp;   end\_lat: float
-
-&nbsp;   hour: int
-
-&nbsp;   day\_of\_week: int
-
-&nbsp;   avg\_speed\_kph: float
-
-&nbsp;   num\_points: int = 30
-
-&nbsp;   is\_rush\_hour: int = 0
+class SimpleETARequest(BaseModel):
+    distance_km: float = Field(..., ge=0, le=100)
+    hour: int = Field(12, ge=0, le=23)
+    is_peak: int = Field(0, ge=0, le=1)
 
 
-
-@router.post("/predict-eta")
-
-async def predict\_eta(request: ETARequest):
-
-&nbsp;   """Predict trip ETA"""
-
-&nbsp;   try:
-
-&nbsp;       ml\_request = PredictionRequest(
-
-&nbsp;           distance\_km=request.distance\_km,
-
-&nbsp;           num\_points=request.num\_points,
-
-&nbsp;           start\_lon=request.start\_lon,
-
-&nbsp;           start\_lat=request.start\_lat,
-
-&nbsp;           end\_lon=request.end\_lon,
-
-&nbsp;           end\_lat=request.end\_lat,
-
-&nbsp;           hour=request.hour,
-
-&nbsp;           day\_of\_week=request.day\_of\_week,
-
-&nbsp;           is\_weekend=1 if request.day\_of\_week >= 5 else 0,
-
-&nbsp;           is\_rush\_hour=request.is\_rush\_hour,
-
-&nbsp;           avg\_speed\_kph=request.avg\_speed\_kph
-
-&nbsp;       )
-
-&nbsp;       
-
-&nbsp;       response = model\_loader.predict\_eta(ml\_request)
-
-&nbsp;       return response.to\_dict()
-
-&nbsp;       
-
-&nbsp;   except ValueError as e:
-
-&nbsp;       raise HTTPException(status\_code=400, detail=str(e))
-
-&nbsp;   except Exception as e:
-
-&nbsp;       raise HTTPException(status\_code=500, detail=str(e))
-
+@router.post("/predict-eta/simple")
+async def predict_eta(request: SimpleETARequest):
+    """Simple ETA prediction"""
+    try:
+        duration = model_loader.predict_eta_simple(
+            distance_km=request.distance_km,
+            hour=request.hour,
+            is_peak=request.is_peak
+        )
+        return {
+            "predicted_duration_minutes": round(duration, 2),
+            "timestamp": datetime.utcnow().isoformat() + 'Z'
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/health")
+async def health():
+    """Health check"""
+    return model_loader.health_check()
 
-async def health\_check():
 
-&nbsp;   """ML model health check"""
-
-&nbsp;   return model\_loader.health\_check()
-
+@router.get("/model-info")
+async def model_info():
+    """Model information"""
+    return model_loader.get_model_info()
 ```
 
-
-
-\*\*4. Register Router in Main App:\*\*
+### Register Router (app/main.py)
 
 ```python
-
-\# In d-nerve-backend/app/main.py
-
-
-
+from fastapi import FastAPI
 from app.routers import eta
 
-
-
-app = FastAPI(title="D-Nerve API")
-
-
-
-app.include\_router(eta.router)
-
+app = FastAPI(title="D-Nerve API", version="2.0.0")
+app.include_router(eta.router)
 ```
 
-
-
-\*\*5. Test with Postman:\*\*
+### Test with cURL
 
 ```bash
+# Health check
+curl http://localhost:8000/api/v1/health
 
-\# Start backend
+# Simple prediction
+curl -X POST http://localhost:8000/api/v1/predict-eta/simple \
+  -H "Content-Type: application/json" \
+  -d '{"distance_km": 10, "hour": 8, "is_peak": 1}'
 
-uvicorn app.main:app --reload
-
-
-
-\# Test health
-
-GET http://localhost:8000/api/v1/health
-
-
-
-\# Test prediction
-
-POST http://localhost:8000/api/v1/predict-eta
-
-Body:
-
-{
-
-&nbsp; "distance\_km": 12.5,
-
-&nbsp; "start\_lon": 116.4,
-
-&nbsp; "start\_lat": 39.9,
-
-&nbsp; "end\_lon": 116.5,
-
-&nbsp; "end\_lat": 40.0,
-
-&nbsp; "hour": 8,
-
-&nbsp; "day\_of\_week": 1,
-
-&nbsp; "avg\_speed\_kph": 22.0,
-
-&nbsp; "is\_rush\_hour": 1
-
-}
-
+# Model info
+curl http://localhost:8000/api/v1/model-info
 ```
-
-
 
 ---
 
+## API Endpoints Summary
 
-
-\##  Documentation
-
-
-
-\- \*\*Full Integration Guide:\*\* See `../docs/BACKEND\_INTEGRATION\_GUIDE.md`
-
-\- \*\*API Specification:\*\* See `../docs/API\_SPECIFICATION.md`
-
-\- \*\*Usage Examples:\*\* See `examples/example\_usage.py`
-
-\- \*\*Tests:\*\* See `tests/test\_model\_loader.py`
-
-
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/predict-eta` | Full ETA prediction (12 features) |
+| POST | `/api/v1/predict-eta/simple` | Simple ETA (distance, hour, is_peak) |
+| GET | `/api/v1/model-info` | Model metadata and metrics |
+| GET | `/api/v1/health` | Health check |
 
 ---
 
+## Model Performance
 
+### ETA Prediction
 
-\##  Troubleshooting
+| Metric | Value |
+|--------|-------|
+| Model | Linear Regression |
+| MAE | 3.28 minutes |
+| RMSE | 4.74 minutes |
+| R² | 0.865 |
+| CV MAE | 3.50 ± 0.35 minutes |
+| Features | 12 |
 
+### Route Discovery
 
+| Dataset | F1 Score | Notes |
+|---------|----------|-------|
+| Cairo Easy (15m noise) | 1.000 | Perfect recovery |
+| Cairo Hard (30-50m noise) | 0.963 | With overlapping routes |
+| Beijing T-Drive (real) | 0.902 (silhouette) | 16 clusters, validates correctly |
 
-\### Error: "FileNotFoundError: ETA model not found"
+---
 
+## Troubleshooting
 
-
-\*\*Solution:\*\* Ensure model files are in correct location:
+### Error: "FileNotFoundError: Model not found"
 
 ```
+Ensure model file exists:
+  app/ml/models/eta_best_model.pkl
 
-d-nerve-backend/
-
-└── app/
-
-&nbsp;   └── ml/
-
-&nbsp;       ├── model\_loader.py
-
-&nbsp;       └── models/
-
-&nbsp;           ├── lightgbm\_eta\_model.pkl  ← Check this exists
-
-&nbsp;           └── route\_discovery\_results.pkl
-
+Check path in model_loader.py matches your structure.
 ```
 
-
-
-\### Error: "ModuleNotFoundError: No module named 'lightgbm'"
-
-
-
-\*\*Solution:\*\* Install dependencies:
+### Error: "ModuleNotFoundError: No module named 'sklearn'"
 
 ```bash
-
-pip install lightgbm pandas numpy
-
+pip install scikit-learn pandas numpy
 ```
 
-
-
-\### Error: Invalid coordinates
-
-
-
-\*\*Solution:\*\* Adjust coordinate validation in `model\_loader.py` line 106-111 for Cairo bounds:
-
-```python
-
-\# Change from Beijing (39-41°N, 115-118°E)
-
-\# To Cairo (29-31°N, 31-32°E)
-
-if not (29.0 <= self.start\_lat <= 31.0 and 31.0 <= self.start\_lon <= 32.0):
+### Error: Invalid input
 
 ```
-
-
+Check request matches schema:
+- distance_km: 0-100 (float)
+- hour: 0-23 (int)
+- is_peak: 0 or 1 (int)
+```
 
 ---
 
+## Dependencies
 
+Add to `requirements.txt`:
 
-\##  Support
-
-
-
-\*\*Questions?\*\*
-
-\- Create issue on GitHub: https://github.com/d-nerve-cairo/d-nerve-ml-models/issues
-
-\- Contact ML Team (Group 2)
-
-\- Check full documentation in `docs/`
-
-
+```
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.0.0
+```
 
 ---
 
+## Support
 
+- **Issues:** https://github.com/d-nerve-cairo/d-nerve-ml-models/issues
+- **Docs:** See `docs/API_SPECIFICATION.md`
+- **Contact:** Group 2 - ML Team
 
-\*\*Last Updated:\*\* December 1, 2025  
+---
 
-\*\*Version:\*\* 1.0.0  
-
-\*\*ML Team:\*\* Group 2
-
+**Version:** 2.0.0  
+**Updated:** January 20, 2026  
+**ML Team:** Group 2
