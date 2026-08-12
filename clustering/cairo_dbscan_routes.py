@@ -128,7 +128,7 @@ def cluster_trajectories(dist_matrix, eps, min_samples):
     return labels
 
 # ============================================================================
-# EVALUATION METRICS (KEY FOR YOUR PROJECT!)
+# EVALUATION METRICS (KEY FOR THE PROJECT!)
 # ============================================================================
 
 def evaluate_clustering(predicted_labels, true_labels, trip_ids, df):
